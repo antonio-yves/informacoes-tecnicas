@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Management;
-using Microsoft.VisualBasic.Devices;
 
 namespace GetInfo
 {
@@ -8,11 +7,39 @@ namespace GetInfo
     {
         static void Main(string[] args)
         {
-            ComputerInfo computerInfo = new ComputerInfo();
+            ManagementClass mc_sys = new ManagementClass("Win32_OperatingSystem");
+            ManagementObjectCollection moc_sys = mc_sys.GetInstances();
 
             Console.WriteLine("========== Informações do Sistema ==========\n");
-            Console.WriteLine("SO: " + computerInfo.OSFullName);
-            Console.WriteLine("Memória RAM: " + Math.Round(computerInfo.TotalPhysicalMemory / Math.Pow(1024.0, 3.0)) + "GB");
+
+            foreach (ManagementObject mo in moc_sys)
+            {
+                Console.WriteLine("SO: " + mo.Properties["Caption"].Value.ToString());
+                Console.WriteLine("Versão: " + mo.Properties["Version"].Value.ToString());
+                Console.WriteLine("Arquitetura: " + mo.Properties["OSArchitecture"].Value.ToString());
+            }
+
+            ManagementClass mc_comp = new ManagementClass("Win32_ComputerSystem");
+            ManagementObjectCollection moc_comp = mc_comp.GetInstances();
+
+            foreach (ManagementObject mo in moc_comp)
+            {
+                Console.WriteLine("Memória RAM: {0}GB", Math.Round(Int64.Parse(mo.Properties["TotalPhysicalMemory"].Value.ToString()) / Math.Pow(1024.0, 3.0)));
+                Console.WriteLine("Nome da Máquina: " + mo.Properties["Name"].Value.ToString());
+                Console.WriteLine("Usuário Conectado: " + mo.Properties["UserName"].Value.ToString());
+                Console.WriteLine("Fabricante: " + mo.Properties["Manufacturer"].Value.ToString());
+                Console.WriteLine("Modelo: " + mo.Properties["Model"].Value.ToString());
+            }
+
+            ManagementClass mc_bios = new ManagementClass("Win32_BIOS");
+            ManagementObjectCollection moc_bios = mc_bios.GetInstances();
+
+            foreach (ManagementObject mo in moc_bios)
+            {
+                Console.WriteLine("Nº de Série: " + mo.Properties["SerialNumber"].Value.ToString());
+                Console.WriteLine("SMBIOS Version: " + mo.Properties["SMBIOSBIOSVersion"].Value.ToString());
+            }
+           
             Console.WriteLine("\n============================================\n");
 
             ManagementClass mc_proc = new ManagementClass("win32_processor");
@@ -23,7 +50,7 @@ namespace GetInfo
             foreach (ManagementObject mo in moc_proc)
             {
                 Console.WriteLine("Processador: " + mo.Properties["name"].Value.ToString());
-                String arch = mo.Properties["Architecture"].Value.ToString();
+                string arch = mo.Properties["Architecture"].Value.ToString();
                 if (arch.Equals("0"))
                 {
                     Console.WriteLine("Arquitetura: x86");
@@ -105,7 +132,9 @@ namespace GetInfo
             
             Console.WriteLine("===========================================");
 
+            Console.WriteLine("\n\nPressione qualquer tecla para fechar a janela...");
             Console.ReadLine();
+
         }
     }
 }
